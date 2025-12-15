@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NR Cellular & Electronics - Phone & Gadget Store</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- React & Babel CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+       
+/*
+NR Cellular & Electronics — Phone & Gadget Store
+FULLY RESTYLED USING NORMAL CSS - FULL PAGE LAYOUT WITH ADMIN AUTH
+-----------------------------------
+*/
+
+import React, { useState, useEffect } from "react";
+import "./styles.css";
+
+// Icons (using emojis as simple icons)
+const Icons = {
+  Home: "🏠",
+  Admin: "⚙️",
+  Login: "🔐",
+  Logout: "🚪",
+  Search: "🔍",
+  Category: "📱",
+  Price: "💰",
+  Add: "➕",
+  Edit: "✏️",
+  Delete: "🗑️",
+  Star: "⭐",
+  Phone: "📱",
+  Headphones: "🎧",
+  Cable: "🔌",
+  Shield: "🛡️",
+  Location: "📍",
+  Clock: "🕒",
+  PhoneCall: "📞",
+  Email: "📧",
+  Store: "🏪"
+};
+
+export default function App() {
+  /* ------------------------- STATE ------------------------- */
+  const DEFAULT_PRODUCTS = [
+    {
+      id: "p1",
+      title: "Fast Charging USB‑C Cable",
+      price: 149,
+      image:
+        "https://images.unsplash.com/photo-1594007654729-407eedc4be3e?q=80&w=800&auto=format&fit=crop",
+      description: "Durable braided fast‑charging cable with nylon coating.",
+      stock: 40,
+      category: "Accessories",
+      rating: 4.5,
+      icon: Icons.Cable
+    },
+    {
+      id: "p2",
+      title: "Wireless Bluetooth Earbuds",
+      price: 399,
+      image:
+        "https://images.unsplash.com/photo-1588422333073-3c7c54c88e87?q=80&w=800&auto=format&fit=crop",
+      description: "Noise-isolating earbuds with charging case. 30hr battery.",
+      stock: 25,
+      category: "Gadgets",
+      rating: 4.8,
+      icon: Icons.Headphones
+    },
+    {
+      id: "p3",
+      title: "Magnetic Phone Holder",
+      price: 199,
+      image:
+        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?q=80&w=800&auto=format&fit=crop",
+      description: "Strong magnetic mount for cars with 360° rotation.",
+      stock: 60,
+      category: "Accessories",
+      rating: 4.3,
+      icon: Icons.Phone
+    },
+    {
+      id: "p4",
+      title: "Tempered Glass Screen Protector",
+      price: 99,
+      image:
+        "https://images.unsplash.com/photo-1580910051074-7e97d1e948c8?q=80&w=800&auto=format&fit=crop",
+      description: "Anti-scratch HD clarity glass with oleophobic coating.",
+      stock: 100,
+      category: "Accessories",
+      rating: 4.7,
+      icon: Icons.Shield
+    },
+    {
+      id: "p5",
+      title: "Power Bank 20000mAh",
+      price: 299,
+      image:
+        "https://images.unsplash.com/photo-1529687745674-2bb29c5d27c3?q=80&w=800&auto=format&fit=crop",
+      description: "Fast charging power bank with multiple ports.",
+      stock: 35,
+      category: "Gadgets",
+      rating: 4.6,
+      icon: "🔋"
+    },
+    {
+      id: "p6",
+      title: "Phone Cleaning Kit",
+      price: 79,
+      image:
+        "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?q=80&w=800&auto=format&fit=crop",
+      description: "Professional cleaning kit for all devices.",
+      stock: 85,
+      category: "Accessories",
+      rating: 4.2,
+      icon: "✨"
+    },
+    {
+      id: "p7",
+      title: "Smart Watch Series 5",
+      price: 899,
+      image:
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop",
+      description: "Heart rate monitor, GPS, water resistant smartwatch.",
+      stock: 15,
+      category: "Gadgets",
+      rating: 4.9,
+      icon: "⌚"
+    },
+    {
+      id: "p8",
+      title: "Laptop Cooling Pad",
+      price: 249,
+      image:
+        "https://images.unsplash.com/photo-1586950012036-b957a3c6f7d3?q=80&w=800&auto=format&fit=crop",
+      description: "USB powered cooling pad with adjustable height.",
+      stock: 30,
+      category: "Electronics",
+      rating: 4.4,
+      icon: "💻"
+    }
+  ];
+
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem("products");
+    return saved ? JSON.parse(saved) : DEFAULT_PRODUCTS;
+  });
+
+  const [view, setView] = useState("home");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [search, setSearch] = useState("");
+  
+  /* --------------------- AUTHENTICATION STATE -------------------- */
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  // Set your admin credentials here
+  const ADMIN_CREDENTIALS = {
+    username: "Muhammad",
+    password: "Hamd2121@"
+  };
+
+  /* -------------------- SAVE DATA TO LOCALSTORAGE -------------------- */
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+  }, [products]);
+
+  /* --------------------- AUTHENTICATION FUNCTIONS -------------------- */
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    setLoginError("");
+    
+    if (adminUsername === ADMIN_CREDENTIALS.username && 
+        adminPassword === ADMIN_CREDENTIALS.password) {
+      setIsAdminAuthenticated(true);
+      setAdminUsername("");
+      setAdminPassword("");
+      setShowAdminLogin(false);
+      setView("admin");
+    } else {
+      setLoginError("Invalid admin credentials. Please try again.");
+      setAdminPassword("");
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    setView("home");
+  };
+
+  const handleAdminButtonClick = () => {
+    if (isAdminAuthenticated) {
+      setView("admin");
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
+
+  /* ---------------------- FILTERING ----------------------- */
+  const filtered = products.filter((p) => {
+    return (
+      (selectedCategory === "All" || p.category === selectedCategory) &&
+      p.title.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  /* ------------------------- UI --------------------------- */
+  return (
+    <div className="app-container">
+      <header className="header">
+        <div className="header-content">
+          <div className="logo-section">
+            <h1 className="logo">
+              <span className="logo-icon">📱</span>
+              <span className="logo-text">
+                <span className="logo-primary">NR</span>
+                <span className="logo-secondary">Cellular & Electronics</span>
+              </span>
+            </h1>
+            <p className="logo-tagline">Your Trusted Mobile & Electronics Specialist</p>
+          </div>
+          
+          <nav className="nav">
+            <button 
+              className={`nav-btn ${view === 'home' ? 'active' : ''}`}
+              onClick={() => setView("home")}
+            >
+              <span className="nav-icon">{Icons.Home}</span>
+              <span className="nav-text">Home</span>
+            </button>
+            
+            {/* Admin Button */}
+            <button 
+              className={`nav-btn ${isAdminAuthenticated ? 'admin-btn' : ''}`}
+              onClick={handleAdminButtonClick}
+            >
+              <span className="nav-icon">{Icons.Admin}</span>
+              <span className="nav-text">
+                {isAdminAuthenticated ? "Admin Panel" : "Admin"}
+              </span>
+            </button>
+            
+            {/* Admin Logout Button */}
+            {isAdminAuthenticated && (
+              <button 
+                className="nav-btn logout-btn"
+                onClick={handleAdminLogout}
+              >
+                <span className="nav-icon">{Icons.Logout}</span>
+                <span className="nav-text">Logout Admin</span>
+              </button>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="modal-overlay">
+          <div className="login-modal admin-modal">
+            <div className="modal-header">
+              <h3><span className="modal-icon">🔒</span> Admin Access Required</h3>
+              <button 
+                className="close-btn"
+                onClick={() => {
+                  setShowAdminLogin(false);
+                  setAdminUsername("");
+                  setAdminPassword("");
+                  setLoginError("");
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleAdminLogin} className="login-form">
+              <p className="login-info">
+                Enter administrator credentials to access the management panel
+              </p>
+              
+              <div className="form-group">
+                <label htmlFor="admin-username">
+                  <span className="input-icon">👤</span> Admin Username
+                </label>
+                <input
+                  id="admin-username"
+                  type="text"
+                  placeholder="Enter admin username"
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  className="form-input"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="admin-password">
+                  <span className="input-icon">🔑</span> Admin Password
+                </label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              
+              {loginError && <p className="error-message">{loginError}</p>}
+              
+              <div className="modal-buttons">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowAdminLogin(false);
+                    setAdminUsername("");
+                    setAdminPassword("");
+                    setLoginError("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <span className="btn-icon">⚙️</span> Login as Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <main className="main-content">
+        {view === "home" && (
+          <div className="home-view">
+            <section className="hero">
+              <div className="hero-content">
+                <div className="hero-badge animate-float">📱 Premium Mobile & Electronic Solutions</div>
+                <h1 className="animate-slide-up">Welcome to <span className="highlight animate-pulse">NR Cellular & Electronics</span></h1>
+                <p className="hero-subtitle animate-slide-up delay-1">
+                  Your trusted mobile & electronics specialist in Krugersdorp<br />
+                  <span className="location"><span className="icon">{Icons.Location}</span> Shop 13, Pick 'n Pay Center, Shannon & Bell Street, Noordheuwel (Next to PostNet)</span><br />
+                  <span className="business-hours"><span className="icon">{Icons.Clock}</span> Mon-Fri: 8AM-7PM | Sat: 8AM-5PM | Sun: 8AM-4PM</span>
+                </p>
+                <div className="hero-stats animate-fade-in delay-2">
+                  <div className="stat">
+                    <span className="stat-number">{products.length}+</span>
+                    <span className="stat-label">Premium Products</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-number">100%</span>
+                    <span className="stat-label">Quality Guarantee</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-number">7</span>
+                    <span className="stat-label">Days Open</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div className="filters-container animate-slide-up delay-1">
+              <div className="filters-header">
+                <h2><span className="filter-icon">{Icons.Search}</span> Find Your Perfect Gadget</h2>
+                <p className="filters-subtitle">Browse our curated collection of premium mobile & electronic accessories</p>
+              </div>
+              <div className="filters">
+                <div className="filter-group">
+                  <span className="filter-label"><span className="filter-icon">{Icons.Category}</span> Category</span>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option>All Products</option>
+                    <option>Accessories</option>
+                    <option>Gadgets</option>
+                    <option>Electronics</option>
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <span className="filter-label"><span className="filter-icon">{Icons.Search}</span> Search</span>
+                  <input
+                    placeholder="Search products..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="products-container">
+              <div className="products-header animate-slide-up delay-2">
+                <h2>Featured Products</h2>
+                <p className="products-subtitle">Best sellers and new arrivals</p>
+              </div>
+              <div className="grid">
+                {filtered.map((p, index) => (
+                  <div className="card animate-card" key={p.id} style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="card-badge animate-bounce">{p.icon}</div>
+                    <div className="card-image-container">
+                      <img src={p.image} alt={p.title} />
+                      <div className="card-overlay">
+                        <button className="quick-view-btn">Quick View</button>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <div className="card-category">{p.category}</div>
+                      <h3>{p.title}</h3>
+                      <div className="card-rating">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className={`star ${i < Math.floor(p.rating) ? 'filled' : ''}`}>
+                            {Icons.Star}
+                          </span>
+                        ))}
+                        <span className="rating-number">{p.rating}</span>
+                      </div>
+                      <p className="desc">{p.description}</p>
+                      <div className="card-footer">
+                        <div className="price-container">
+                          <span className="price">R {p.price}</span>
+                          <span className="stock-badge">{p.stock} in stock</span>
+                        </div>
+                        <button className="btn view-details-btn">
+                          <span className="btn-icon">🔍</span>
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === "admin" && isAdminAuthenticated && (
+          <Admin products={products} setProducts={setProducts} />
+        )}
+        
+        {view === "admin" && !isAdminAuthenticated && (
+          <div className="unauthorized-view">
+            <div className="unauthorized-container">
+              <div className="unauthorized-icon animate-shake">🔒</div>
+              <h2>Access Denied</h2>
+              <p>Administrator access required to view this page.</p>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setShowAdminLogin(true)}
+              >
+                <span className="btn-icon">🔑</span>
+                Admin Login
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h3 className="footer-logo">
+              <span className="logo-icon">📱</span> NR Cellular & Electronics
+            </h3>
+            <p className="footer-tagline">Your Trusted Mobile & Electronics Specialist</p>
+            <div className="footer-contact-info">
+              <p><span className="contact-icon">{Icons.Store}</span> Shop 13, Pick 'n Pay Center, Shannon & Bell Street, Noordheuwel, Krugersdorp (Next to PostNet)</p>
+              <p><span className="contact-icon">{Icons.PhoneCall}</span> 084 281 5387 | 067 128 5857</p>
+              <p><span className="contact-icon">{Icons.Clock}</span> Mon-Fri: 8AM-7PM | Sat: 8AM-5PM | Sun: 8AM-4PM</p>
+            </div>
+          </div>
+          <div className="footer-section">
+            <h4>Quick Links</h4>
+            <ul className="footer-links">
+              <li><button onClick={() => setView("home")}>Home</button></li>
+              <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Back to Top</button></li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h4>Business Hours</h4>
+            <p><span className="clock-icon">🕒</span> Monday - Friday: 8:00 AM - 7:00 PM</p>
+            <p><span className="clock-icon">🕒</span> Saturday: 8:00 AM - 5:00 PM</p>
+            <p><span className="clock-icon">🕒</span> Sunday: 8:00 AM - 4:00 PM</p>
+            <div className="owner-info">
+              <p>Owner/Manager: Muhammad</p>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2024 NR Cellular & Electronics. All rights reserved. | Your Trusted Mobile & Electronics Specialist</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ---------------------- ADMIN PANEL ---------------------- */
+function Admin({ products, setProducts }) {
+  const [title, setTitle] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("Accessories");
+  const [image, setImage] = useState("");
+  const [description, setDescription] = useState("");
+  const [stock, setStock] = useState("");
+  const [rating, setRating] = useState("4.5");
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  const addProduct = () => {
+    if (!title || !price) {
+      alert("Please fill in at least title and price");
+      return;
+    }
+    
+    const newP = {
+      id: editMode ? editId : Math.random().toString(),
+      title,
+      price: Number(price),
+      category,
+      image: image || "https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=800&auto=format&fit=crop",
+      description: description || "Premium mobile product",
+      stock: stock ? Number(stock) : 10,
+      rating: Number(rating) || 4.5,
+      icon: category === "Accessories" ? "🔌" : category === "Gadgets" ? "📱" : "💻"
+    };
+    
+    if (editMode) {
+      setProducts(products.map(p => p.id === editId ? newP : p));
+      setEditMode(false);
+      setEditId(null);
+    } else {
+      setProducts([...products, newP]);
+    }
+    
+    // Reset form
+    setTitle("");
+    setPrice("");
+    setImage("");
+    setDescription("");
+    setStock("");
+    setRating("4.5");
+    setCategory("Accessories");
+  };
+
+  const deleteProduct = (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      setProducts(products.filter(p => p.id !== id));
+    }
+  };
+
+  const editProduct = (product) => {
+    setEditMode(true);
+    setEditId(product.id);
+    setTitle(product.title);
+    setPrice(product.price);
+    setCategory(product.category);
+    setImage(product.image);
+    setDescription(product.description);
+    setStock(product.stock);
+    setRating(product.rating);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditId(null);
+    setTitle("");
+    setPrice("");
+    setImage("");
+    setDescription("");
+    setStock("");
+    setRating("4.5");
+    setCategory("Accessories");
+  };
+
+  const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+  const totalProducts = products.length;
+  const lowStock = products.filter(p => p.stock < 10).length;
+
+  return (
+    <div className="admin-view">
+      <div className="admin-container">
+        <div className="admin-header">
+          <div>
+            <h2 className="admin-title animate-slide-up">
+              <span className="admin-icon">⚙️</span> Admin Dashboard
+            </h2>
+            <p className="admin-subtitle">Manage NR Cellular & Electronics Products & Inventory</p>
+            <div className="admin-stats">
+              <div className="admin-stat animate-fade-in delay-1">
+                <span className="stat-icon">📦</span>
+                <div>
+                  <span className="stat-number">{totalProducts}</span>
+                  <span className="stat-label">Products</span>
+                </div>
+              </div>
+              <div className="admin-stat animate-fade-in delay-2">
+                <span className="stat-icon">💰</span>
+                <div>
+                  <span className="stat-number">R {totalValue.toFixed(2)}</span>
+                  <span className="stat-label">Inventory Value</span>
+                </div>
+              </div>
+              <div className="admin-stat animate-fade-in delay-3">
+                <span className="stat-icon">⚠️</span>
+                <div>
+                  <span className="stat-number">{lowStock}</span>
+                  <span className="stat-label">Low Stock</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {editMode && (
+            <button className="btn btn-secondary animate-slide-left" onClick={cancelEdit}>
+              <span className="btn-icon">←</span> Cancel Edit
+            </button>
+          )}
+        </div>
+
+        <div className="admin-form-section animate-slide-up delay-1">
+          <h3><span className="section-icon">{editMode ? "✏️" : "➕"}</span> {editMode ? "Edit Product" : "Add New Product"}</h3>
+          <div className="admin-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label><span className="input-icon">🏷️</span> Product Title *</label>
+                <input
+                  placeholder="Enter product title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label><span className="input-icon">💰</span> Price (R) *</label>
+                <input
+                  placeholder="Enter price"
+                  value={price}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label><span className="input-icon">📱</span> Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="form-select"
+                >
+                  <option>Accessories</option>
+                  <option>Gadgets</option>
+                  <option>Electronics</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label><span className="input-icon">📦</span> Stock Quantity</label>
+                <input
+                  placeholder="Enter stock"
+                  value={stock}
+                  type="number"
+                  min="0"
+                  onChange={(e) => setStock(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label><span className="input-icon">⭐</span> Rating</label>
+                <input
+                  placeholder="Enter rating (1-5)"
+                  value={rating}
+                  type="number"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  onChange={(e) => setRating(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label><span className="input-icon">🖼️</span> Image URL</label>
+              <input
+                placeholder="Enter image URL"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                className="form-input"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label><span className="input-icon">📝</span> Description</label>
+              <textarea
+                placeholder="Enter product description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="form-input textarea"
+                rows="3"
+              />
+            </div>
+
+            <button className="btn btn-primary" onClick={addProduct}>
+              <span className="btn-icon">{editMode ? "💾" : "➕"}</span>
+              {editMode ? "Update Product" : "Add Product"}
+            </button>
+          </div>
+        </div>
+
+        <div className="products-list">
+          <h3><span className="section-icon">📦</span> Product Inventory ({products.length})</h3>
+          <div className="products-grid">
+            {products.map((p, index) => (
+              <div className="admin-product-card animate-card" key={p.id} style={{ animationDelay: `${index * 0.05}s` }}>
+                <div className="product-status">
+                  <span className={`stock-indicator ${p.stock < 10 ? 'low' : 'good'}`}>
+                    {p.stock < 10 ? '⚠️ Low Stock' : '✅ In Stock'}
+                  </span>
+                </div>
+                <img src={p.image} alt={p.title} className="admin-product-image" />
+                <div className="admin-product-info">
+                  <div className="product-header">
+                    <h4>{p.title}</h4>
+                    <span className="product-id">ID: {p.id.slice(0, 8)}</span>
+                  </div>
+                  <p className="admin-product-description">{p.description}</p>
+                  <div className="admin-product-details">
+                    <div className="detail-item">
+                      <span className="detail-icon">💰</span>
+                      <span className="detail-value">R {p.price}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-icon">📱</span>
+                      <span className="detail-value">{p.category}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-icon">📦</span>
+                      <span className="detail-value">{p.stock} units</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-icon">⭐</span>
+                      <span className="detail-value">{p.rating}/5</span>
+                    </div>
+                  </div>
+                  <div className="admin-product-actions">
+                    <button 
+                      className="btn btn-edit"
+                      onClick={() => editProduct(p)}
+                    >
+                      <span className="btn-icon">✏️</span> Edit
+                    </button>
+                    <button 
+                      className="btn btn-danger"
+                      onClick={() => deleteProduct(p.id)}
+                    >
+                      <span className="btn-icon">🗑️</span> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+    </script>
+</body>
+</html>
